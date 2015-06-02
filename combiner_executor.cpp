@@ -101,14 +101,18 @@ static void runTask(ExecutorDriver* driver, const TaskInfo& task)
   cout << "enters sendFrameworkMessage" << endl; 
   //build message to send back with task status 
   string msg = minDistMessage(min, parent, dir);
-  cout << "returns from minDistMessage";
-  driver->sendFrameworkMessage(msg); 
+  
 
-  cout << "returns from sendFrameworkMessage " << endl; 
 
+  //cout << "returns from minDistMessage";
+  //driver->sendFrameworkMessage(msg); 
+
+  //cout << "returns from sendFrameworkMessage " << endl; 
+  cout << "message data sending back " << msg << endl; 
   TaskStatus status;
   status.mutable_task_id()->MergeFrom(task.task_id());
   status.set_state(TASK_FINISHED);
+  status.set_data(msg); 
   driver->sendStatusUpdate(status);
   cout << "sent status update " << endl; 
 }

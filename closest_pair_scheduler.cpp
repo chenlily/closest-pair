@@ -53,8 +53,7 @@ class ClosestPairScheduler : public Scheduler
   ClosestPairScheduler(const ExecutorInfo& _combiner)
     :combiner(_combiner),  
     tasksLaunched(0), 
-    tasksFinished(0), 
-    frameworkMessagesReceived(0) {
+    tasksFinished(0) {
       SplitInfo start(0, pointVector.size() - 1, nextParentId++, NONE);
       splitQueue.push(start);
     }
@@ -111,12 +110,21 @@ class ClosestPairScheduler : public Scheduler
       
       // Launch tasks.
       vector<TaskInfo> tasks;
+      if (parentMap.empty()) {
+        cout << "no more parent things to run " << endl; 
+      }
       for (size_t i = 0; i < maxTasks && parentMap.size() > 0; i++) {
+        cout << "parent queue size " << parentMap.size()  << endl; 
+        if (parentMap.size() == 1) {
+          cout << "single parent " << parentMap.begin()->second.parent << endl;
+          cout << "element " << parentMap.begin()->second.lMinDist << " "
+          << parentMap.begin()->second.rMinDist << endl; 
+        }
         //cout << "reaches here " << endl; 
         auto itr = parentMap.begin();
         while (itr != parentMap.end()) {
           if (itr->second.lMinDist != NOT_SET && itr->second.rMinDist != NOT_SET
-            && itr->second.parent != 0) {
+            /*&& itr->second.parent == 0*/) {
 
             string taskData = createTaskData(pointVector, itr->second); 
 
@@ -126,20 +134,7 @@ class ClosestPairScheduler : public Scheduler
             task.set_name("Combiner " + combineId);
             task.mutable_task_id()->set_value(combineId);
             task.mutable_slave_id()->MergeFrom(offer.slave_id());
-            task.mutable_executor()->MergeFrom(combiner);
-
-            /*
-            task.mutable_resources()->add_resources();
-            task.mutable_resources()->set_name("cpus"); 
-            task.mutable_resources()->set_type(Value::SCALAR); 
-            task.mutable_resources()->set_value(CPUS_PER_TASK);
-
-
-            task.mutable_resources()->add_resources();
-            task.mutable_resources()->set_name("mem"); 
-            task.mutable_resources()->set_type(Value::SCALAR); 
-            task.mutable_resources()->set_value(MEM_PER_TASK); */
-            
+            task.mutable_executor()->MergeFrom(combiner);            
             task.mutable_resources()->MergeFrom(TASK_RESOURCES);
             task.set_data(taskData);                
             tasks.push_back(task);
@@ -167,6 +162,23 @@ class ClosestPairScheduler : public Scheduler
     cout << "receiving status updates" << endl; 
     if (status.state() == TASK_FINISHED) {
       cout << "Task " << status.task_id().value() << " finished" << endl;
+
+      vector<double> infoVec = stringToVector(status.data());
+      double dist = infoVec[0];
+      int parent = int(infoVec[1]); 
+
+      Direction dir = static_cast<Direction>(int(infoVec[2])); 
+
+      if(dist < minDistance) {
+        minDistance = dist;
+        cout << "updating minDist to " << minDistance << endl; 
+      }
+
+      if(dir == LEFT) 
+          parentMap.at(parent).lMinDist = dist; 
+      else if(dir == RIGHT)
+          parentMap.at(parent).rMinDist = dist; 
+
       tasksFinished++;
     } else if (status.state() == TASK_LOST) {
       cout << "Task " << status.task_id().value() << " " << status.message() << endl;  
@@ -186,29 +198,7 @@ class ClosestPairScheduler : public Scheduler
   virtual void frameworkMessage(SchedulerDriver* driver,
       const ExecutorID& executorId,
       const SlaveID& slaveId,
-      const string& data) {
-
-    if (executorId.value() == combiner.executor_id().value()) {
-      cout << "processing Framework Message" << endl; 
-      vector<double> infoVec = stringToVector(data); 
-      double dist = infoVec[0];
-      int parent = int(infoVec[1]); 
-
-      Direction dir = static_cast<Direction>(int(infoVec[2])); 
-      if(dist < minDistance) {
-        minDistance = dist;
-        cout << "updating minDist to " << minDistance << endl; 
-      }
-          
-
-      if(dir == LEFT) 
-          parentMap.at(parent).lMinDist = dist; 
-      else if(dir == RIGHT)
-          parentMap.at(parent).rMinDist = dist; 
-      
-    } 
-    frameworkMessagesReceived++;
-  }
+      const string& data) {}
 
   virtual void slaveLost(SchedulerDriver* driver, const SlaveID& sid) {}
 
@@ -225,7 +215,6 @@ class ClosestPairScheduler : public Scheduler
   const ExecutorInfo combiner;
   size_t tasksLaunched;
   size_t tasksFinished;
-  size_t frameworkMessagesReceived;
 };
 
 
