@@ -4,11 +4,10 @@
 #include <queue>
 #include <algorithm> 
 #include <assert.h>
+#include <limits>
 #include <stout/stringify.hpp>
 #include <stout/numify.hpp>
 #include <stout/lambda.hpp>
-
-
 #include <mesos/executor.hpp>
 #include "closest_pair_helper.hpp"
 
@@ -20,12 +19,25 @@ using std::string;
 using std::vector; 
 using std::min; 
 using std::queue;
+using std::numeric_limits; 
 
 double minDist(
     double lMinDist, 
     double rMinDist, 
-    const vector<Point> & pointVec) {
+    const vector<Point> & pointVec) { 
   
+  cout << "lMinDist " << lMinDist << endl; 
+  cout << "rMinDist" << rMinDist << endl; 
+  cout << "pointVector: "; 
+  for(int i = 0; i != pointVec.size(); i++) {
+    cout << pointVec[i].x << " " << pointVec[i].y <<  ";"; 
+  } 
+
+  if (pointVec.size() == 1)
+    return numeric_limits<double>::max(); 
+  else if (pointVec.size() == 2)
+    return calcDist(pointVec[0], pointVec[1]); 
+
   double upperBound = min(lMinDist, rMinDist); 
 
   vector<Point> candidates; 
@@ -46,6 +58,9 @@ double minDist(
         candMin = calcDist(candidates[i], candidates[j]);
     }
   }
+
+  cout << "returns from minDist" << endl; 
+
   return min(upperBound, candMin); 
 }
 
@@ -55,6 +70,8 @@ string minDistMessage(double minDist, int parent, Direction dir)
   doubleVec.push_back(minDist); 
   doubleVec.push_back(double(parent));
   doubleVec.push_back(double(dir)); 
+
+  return vectorToString(doubleVec); 
 }
 
 static void runTask(ExecutorDriver* driver, const TaskInfo& task)
@@ -76,16 +93,24 @@ static void runTask(ExecutorDriver* driver, const TaskInfo& task)
   Direction dir = static_cast<Direction>(int(dataVec[dataVec.size() - 1])); 
 
 
-  //calculate min distance 
+  //calculate min distance   
+  cout << "run task info --- " << endl; 
+  cout << "Parent " << parent << endl; 
   double min = minDist(lMinDist, rMinDist, pv); 
-
+  cout << "returns from minDist with min: " << min << endl; 
+  cout << "enters sendFrameworkMessage" << endl; 
   //build message to send back with task status 
-  driver->sendFrameworkMessage(minDistMessage(min, parent, dir)); 
+  string msg = minDistMessage(min, parent, dir);
+  cout << "returns from minDistMessage";
+  driver->sendFrameworkMessage(msg); 
+
+  cout << "returns from sendFrameworkMessage " << endl; 
 
   TaskStatus status;
   status.mutable_task_id()->MergeFrom(task.task_id());
   status.set_state(TASK_FINISHED);
   driver->sendStatusUpdate(status);
+  cout << "sent status update " << endl; 
 }
 
 void* start(void* arg) {
@@ -119,7 +144,7 @@ class ClosestPairExecutor : public Executor
   virtual void launchTask(ExecutorDriver* driver, const TaskInfo& task) {
     cout << "Starting task " << task.task_id().value() << endl;
 
-    lambda::function<void(void)>* thunk =
+    /*lambda::function<void(void)>* thunk =
       new lambda::function<void(void)>(lambda::bind(&runTask, driver, task));
 
     pthread_t pthread;
@@ -137,7 +162,9 @@ class ClosestPairExecutor : public Executor
       status.set_state(TASK_RUNNING);
 
       driver->sendStatusUpdate(status);
-    }   
+    }*/
+
+    runTask(driver, task); 
   }
 
   virtual void killTask(ExecutorDriver* driver, const TaskID& taskId) {}

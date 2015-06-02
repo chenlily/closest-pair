@@ -164,10 +164,12 @@ class ClosestPairScheduler : public Scheduler
 
   virtual void statusUpdate(SchedulerDriver* driver, const TaskStatus& status) {
     
-    cout << "sending status updates" << endl; 
+    cout << "receiving status updates" << endl; 
     if (status.state() == TASK_FINISHED) {
       cout << "Task " << status.task_id().value() << " finished" << endl;
       tasksFinished++;
+    } else if (status.state() == TASK_LOST) {
+      cout << "Task " << status.task_id().value() << " " << status.message() << endl;  
     }
 
     if (tasksFinished == tasksLaunched && 
@@ -175,9 +177,7 @@ class ClosestPairScheduler : public Scheduler
         parentMap.empty()) {
       // Wait to receive any pending framework messages
       // If some framework messages are lost, it may hang indefinitely.
-      while (frameworkMessagesReceived != tasksFinished) {
-        sleep(1);
-      }
+
       shutdown();
       driver->stop();
     } 
@@ -195,8 +195,11 @@ class ClosestPairScheduler : public Scheduler
       int parent = int(infoVec[1]); 
 
       Direction dir = static_cast<Direction>(int(infoVec[2])); 
-      if(dist < minDistance)
-          minDistance = dist;
+      if(dist < minDistance) {
+        minDistance = dist;
+        cout << "updating minDist to " << minDistance << endl; 
+      }
+          
 
       if(dir == LEFT) 
           parentMap.at(parent).lMinDist = dist; 
@@ -351,12 +354,13 @@ int main(int argc, char** argv) {
   schedulerDriver = new MesosSchedulerDriver(&scheduler, framework, master);
 
   int status = schedulerDriver->run() == DRIVER_STOPPED ? 0 : 1;
+  cout << "Final Minimum Distance between two points: " << minDistance << endl;  
+
 
   // Ensure that the driver process terminates.
   schedulerDriver->stop();
 
   shutdown();
-  cout << "Minimum Distance between two points: " << minDistance << endl;  
   delete schedulerDriver;
   return status;
 }
