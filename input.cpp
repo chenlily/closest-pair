@@ -8,16 +8,19 @@
 #include <utility>
 #include <algorithm> 
 #include <cassert>
+#include <sstream> 
 
 using namespace std; 
 
 const int NOT_SET = -1; 
+
 
 enum Direction{
 	LEFT, 
 	RIGHT, 
 	NONE
 }; 
+
 
 struct Point{
 	double x,y;
@@ -26,10 +29,10 @@ struct Point{
 		: x(_x), y(_y) {}
 };
 
+
 struct SplitInfo{
 	int left, right, parent; 
 	double lMinDist = NOT_SET, rMinDist = NOT_SET;
-	//enum Direction = {LEFT, RIGHT, NONE};
 	Direction dir;
 
 	void printSplitInfo(){
@@ -39,38 +42,27 @@ struct SplitInfo{
 			cout << "dir = " << dir << endl; 
 			cout << "----" << endl << endl; 
 	}
-	/**
-	void setSplitInfo(int _left, int _right, int _parent, Direction _dir){
-		left = _left; 
-		right = _right; 
-		parent = _parent; 
-	} **/
 
 	SplitInfo(int _left, int _right, int _parent, Direction _dir)
 		:left(_left), right(_right), parent(_parent), 
 		lMinDist(double(NOT_SET)), rMinDist(double(NOT_SET)), 
 		dir(_dir) { 
 			//printSplitInfo();
-		}  
+		} 
 
-	//copy constructor 
-	/**SplitInfo(const SplitInfo& other){
-		left = other.left; 
-		right = other.right; 
-		parent = other.parent; 
-		lMinDist = other.lMinDist; 
-		rMinDist = other.rMinDist; 
+	string convertToString()
+	{
+		vector<double> vec; 
+		vec.push_back((double)left); 
+		vec.push_back((double)right); 
+		vec.push_back((double)parent);
+		vec.push_back((double)lMinDist);
+		vec.push_back((double)rMinDist);
+		vec.push_back((double)dir);
+		return "hi";
 	}
-	//override equals sign
-	SplitInfo& operator=(const SplitInfo& other){
-		left = other.left; 
-		right = other.right; 
-		parent = other.parent; 
-		lMinDist = other.lMinDist; 
-		rMinDist = other.rMinDist; 
-		return *this; 
-	} **/
 };
+
 
 static vector<Point> pointVector; 
 static queue<SplitInfo> splitQueue; 
@@ -87,6 +79,7 @@ double calcDist(Point p1, Point p2){
 void splitter(){
 	while(!splitQueue.empty()){
 		SplitInfo splitVec = splitQueue.front();
+		cout << splitVec.convertToString();
 		splitQueue.pop();
 
 		//base case 
@@ -114,19 +107,6 @@ void splitter(){
 	}
 }
 
-struct less_than_X
-{
-	inline bool operator() (const Point& p1, const Point& p2){
-		return p1.x < p2.x;
-	}
-};
-
-struct less_than_Y
-{
-	inline bool operator() (const Point& p1, const Point& p2){
-		return p1.y < p2.y; 
-	}
-};
 
 double minDist(SplitInfo splitVec){
 	double upperBound = min(splitVec.lMinDist, splitVec.rMinDist); 
@@ -139,7 +119,7 @@ double minDist(SplitInfo splitVec){
 		}
 	}
 
-	sort(candidates.begin(), candidates.end(), less_than_Y()); 
+	sort(candidates.begin(), candidates.end(), [](Point p1, Point p2){ return p1.y < p2.y; });
 	double candMin = upperBound; 
 	for (int i = 0; i < candidates.size(); i++){
 		for (int j = i + 1; j < candidates.size() && candidates[j].y - candidates[i].y < candMin; j++){
@@ -149,6 +129,7 @@ double minDist(SplitInfo splitVec){
 	}
 	return min(upperBound, candMin); 
 }
+
 
 double combiner(){
 	while (parentMap.size() > 1){
@@ -182,11 +163,17 @@ double combiner(){
 	return minDist(itr->second); 
 } 
 
-
+//#define shift argc--,argv++
 int main(int argc, char** argv)
 {
 	//get vector points from command line 
 	string filename; 
+	cout << argv[0] << endl; 
+	cout << argv[1] << endl; 
+	cout << argc << endl; 
+	
+	
+	
 	while(argc != 2){
 		cout << "give only a single filename as input" << endl; 
 	}
@@ -203,13 +190,12 @@ int main(int argc, char** argv)
 	}
 
 	//debugging, viewing output 
-	
 	for(int i = 0; i != pointVector.size(); i++){
 		cout << pointVector[i].x << " " << pointVector[i].y << endl; 
 	} 
 
 	//remember to sort nodes by x coordinate 
-	sort(pointVector.begin(), pointVector.end(), less_than_X());
+	sort(pointVector.begin(), pointVector.end(), [](Point p1, Point p2){ return p1.x < p2.x; });
 
 	//put first node into split queue
 	SplitInfo start(0, pointVector.size() - 1, nextParentId++, NONE);
@@ -218,7 +204,6 @@ int main(int argc, char** argv)
 	splitter();
 
 	//print parent map
-	
 	for(auto it = parentMap.begin(); it != parentMap.end(); it++){
 		cout << "parent id #: " << it->first << endl; 
 		it->second.printSplitInfo();

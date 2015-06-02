@@ -1,26 +1,26 @@
 CXX = g++
-CXXFLAGS = -g -O2 -pthread
+CXXFLAGS = -g -O2 -pthread -std=c++11
 LDFLAGS += -lmesos -lpthread -lprotobuf
-CXXCOMPILE = $(CXX) $(INCLUDES) $(CXXFLAGS) -c -o $@
-CXXLINK = $(CXX) $(INCLUDES) $(CXXFLAGS) -o $@
+CXXCOMPILE = $(CXX) $(CXXFLAGS) -c -o $@ $(INCLUDES)
+CXXLINK = $(CXX) $(CXXFLAGS) -o $@ $(INCLUDES)
+
 
 default: all
-all: rendler crawl_executor render_executor
+all: closest_pair_scheduler combiner_executor
 
-HEADERS = rendler_helper.hpp
+HEADERS = closest_pair_helper.hpp
 
-
-crawl_executor: crawl_executor.cpp $(HEADERS)
-	$(CXXLINK) $<  $(LDFLAGS) -lboost_regex -lcurl
-
-%: %.cpp $(HEADERS)
+combiner_executor: combiner_executor.cpp $(HEADERS)
 	$(CXXLINK) $< $(LDFLAGS)
 
-# check: crawl
-#	./crawl http://mesosphere.io/team/
+
+%: %.cpp $(HEADERS)
+	$(CXXLINK) $< $(LDFLAGS) -lboost_regex -lcurl
+
 
 clean:
-	(rm -f core crawl_executor render_executor rendler)
+	(rm -f core combiner_executor closest_pair_scheduler)
 
+#serial execution testing algorithm
 sample: input.cpp
 	$(CXX) input.cpp -g -std=c++11
