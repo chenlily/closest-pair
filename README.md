@@ -97,10 +97,10 @@ struct SplitInfo (
 
 The scheduler accepts a text file as command-line parameter to create a vector of points to calculate the minimum distance. 
 
--Reads in the file and initializes a point vector
--Split each vector into two halves until it is 2 or fewer elements. On each split, create a SplitInfo object representing the split and insert it into the parentMap 
--Until parentMap is empty, launch a combiner task to calculate the minDistance on splitInfo objects that minimum distances calculated on the left and right sides. Update splitInfo's parent through parentMap. 
--Print the final minDistance through stdout
+*Reads in the file and initializes a point vector
+*Split each vector into two halves until it is 2 or fewer elements. On each split, create a SplitInfo object representing the split and insert it into the parentMap 
+*Until parentMap is empty, launch a combiner task to calculate the minDistance on splitInfo objects that minimum distances calculated on the left and right sides. Update splitInfo's parent through parentMap. 
+*Print the final minDistance through stdout
 
 ### Combiner Executor
 
