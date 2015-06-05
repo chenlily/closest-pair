@@ -73,9 +73,6 @@ class ClosestPairScheduler : public Scheduler
 
   virtual void resourceOffers(SchedulerDriver* driver,
       const vector<Offer>& offers) {
-    cout << "getting resource offers" << endl; 
-    //for (size_t i = 0; i < offers.size(); i++) {
-      //const Offer& offer = offers[i];
     foreach(const Offer& offer, offers){
       cout << "Received offer " << offer.id() << " with " 
         << offer.resources() << endl; 
@@ -88,7 +85,6 @@ class ClosestPairScheduler : public Scheduler
 
       double cpus = 0; 
       double mem = 0; 
-      //size_t maxTasks = 0; 
 
       for (int i = 0; i < offer.resources_size(); i++) {
         const Resource& resource = offer.resources(i);
@@ -106,25 +102,13 @@ class ClosestPairScheduler : public Scheduler
         mem -= MEM_PER_TASK; 
       }
 
-      cout << "MaxTasks " << maxTasks << endl; 
-      
       // Launch tasks.
       vector<TaskInfo> tasks;
-      if (parentMap.empty()) {
-        cout << "no more parent things to run " << endl; 
-      }
       for (size_t i = 0; i < maxTasks && parentMap.size() > 0; i++) {
-        cout << "parent queue size " << parentMap.size()  << endl; 
-        if (parentMap.size() == 1) {
-          cout << "single parent " << parentMap.begin()->second.parent << endl;
-          cout << "element " << parentMap.begin()->second.lMinDist << " "
-          << parentMap.begin()->second.rMinDist << endl; 
-        }
-        //cout << "reaches here " << endl; 
         auto itr = parentMap.begin();
         while (itr != parentMap.end()) {
-          if (itr->second.lMinDist != NOT_SET && itr->second.rMinDist != NOT_SET
-            /*&& itr->second.parent == 0*/) {
+          if (itr->second.lMinDist != NOT_SET 
+              && itr->second.rMinDist != NOT_SET) {
 
             string taskData = createTaskData(pointVector, itr->second); 
 
@@ -164,32 +148,29 @@ class ClosestPairScheduler : public Scheduler
       cout << "Task " << status.task_id().value() << " finished" << endl;
 
       vector<double> infoVec = stringToVector(status.data());
+
       double dist = infoVec[0];
       int parent = int(infoVec[1]); 
 
-      Direction dir = static_cast<Direction>(int(infoVec[2])); 
+      Direction dir = static_cast<Direction>(int(infoVec[2]));
 
-      if(dist < minDistance) {
+      if(dist < minDistance)
         minDistance = dist;
-        cout << "updating minDist to " << minDistance << endl; 
-      }
 
-      if(dir == LEFT) 
-          parentMap.at(parent).lMinDist = dist; 
+      if(dir == LEFT)
+        parentMap.at(parent).lMinDist = dist; 
       else if(dir == RIGHT)
-          parentMap.at(parent).rMinDist = dist; 
-
+        parentMap.at(parent).rMinDist = dist; 
+      
       tasksFinished++;
     } else if (status.state() == TASK_LOST) {
-      cout << "Task " << status.task_id().value() << " " << status.message() << endl;  
+      cout << "TASK LOST: " << status.task_id().value() 
+        << " " << status.message() << endl;  
     }
 
     if (tasksFinished == tasksLaunched && 
         splitQueue.empty() && 
         parentMap.empty()) {
-      // Wait to receive any pending framework messages
-      // If some framework messages are lost, it may hang indefinitely.
-
       shutdown();
       driver->stop();
     } 
@@ -304,11 +285,9 @@ int main(int argc, char** argv) {
       if (splitVec.right == splitVec.left) {
         splitVec.lMinDist = splitVec.rMinDist = 
         numeric_limits<double>::max(); 
-        cout << "gets to base case in splitting" << endl; 
       } else if (splitVec.right - splitVec.left == 1) {
         splitVec.lMinDist = splitVec.rMinDist = 
         calcDist(pointVector[splitVec.left], pointVector[splitVec.right]); 
-        cout << "gets to base case in splitting" << endl; 
       } else {
         cerr << "error in splitting indices" << endl;
         return 0; 
@@ -328,8 +307,6 @@ int main(int argc, char** argv) {
       }
       parentMap.insert(make_pair(nextParentId++, splitVec));
   }
-
-  cout << "finished splitting " << endl; 
 
   // Set up the signal handler for SIGINT for clean shutdown.
   struct sigaction action;

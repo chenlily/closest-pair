@@ -25,13 +25,6 @@ double minDist(
     double lMinDist, 
     double rMinDist, 
     const vector<Point> & pointVec) { 
-  
-  cout << "lMinDist " << lMinDist << endl; 
-  cout << "rMinDist" << rMinDist << endl; 
-  cout << "pointVector: "; 
-  for(int i = 0; i != pointVec.size(); i++) {
-    cout << pointVec[i].x << " " << pointVec[i].y <<  ";"; 
-  } 
 
   if (pointVec.size() == 1)
     return numeric_limits<double>::max(); 
@@ -59,8 +52,6 @@ double minDist(
     }
   }
 
-  cout << "returns from minDist" << endl; 
-
   return min(upperBound, candMin); 
 }
 
@@ -76,7 +67,6 @@ string minDistMessage(double minDist, int parent, Direction dir)
 
 static void runTask(ExecutorDriver* driver, const TaskInfo& task)
 {
-  cout << "Running task " << task.task_id().value() << endl;
   vector<double> dataVec = stringToVector(task.data()); 
   
   vector<Point> pv; 
@@ -88,33 +78,21 @@ static void runTask(ExecutorDriver* driver, const TaskInfo& task)
   }
 
   int parent = int(dataVec[dataVec.size() - 4]);
-  double lMinDist = int(dataVec[dataVec.size() - 3]);
-  double rMinDist = int(dataVec[dataVec.size() - 2]);
+  double lMinDist = dataVec[dataVec.size() - 3];
+  double rMinDist = dataVec[dataVec.size() - 2];
   Direction dir = static_cast<Direction>(int(dataVec[dataVec.size() - 1])); 
 
-
-  //calculate min distance   
-  cout << "run task info --- " << endl; 
-  cout << "Parent " << parent << endl; 
   double min = minDist(lMinDist, rMinDist, pv); 
-  cout << "returns from minDist with min: " << min << endl; 
-  cout << "enters sendFrameworkMessage" << endl; 
+
   //build message to send back with task status 
   string msg = minDistMessage(min, parent, dir);
   
-
-
-  //cout << "returns from minDistMessage";
-  //driver->sendFrameworkMessage(msg); 
-
-  //cout << "returns from sendFrameworkMessage " << endl; 
-  cout << "message data sending back " << msg << endl; 
   TaskStatus status;
   status.mutable_task_id()->MergeFrom(task.task_id());
   status.set_state(TASK_FINISHED);
   status.set_data(msg); 
   driver->sendStatusUpdate(status);
-  cout << "sent status update " << endl; 
+  cout << "Task finished, sent status update " << endl; 
 }
 
 void* start(void* arg) {
@@ -133,7 +111,6 @@ class ClosestPairExecutor : public Executor
       const FrameworkInfo& frameworkInfo,
       const SlaveInfo& slaveInfo) {
     cout << "Registered Closest Pair Executor on "; 
-    cout << slaveInfo.hostname() << endl;
   }
 
   virtual void reregistered(ExecutorDriver* driver,
@@ -147,27 +124,6 @@ class ClosestPairExecutor : public Executor
 
   virtual void launchTask(ExecutorDriver* driver, const TaskInfo& task) {
     cout << "Starting task " << task.task_id().value() << endl;
-
-    /*lambda::function<void(void)>* thunk =
-      new lambda::function<void(void)>(lambda::bind(&runTask, driver, task));
-
-    pthread_t pthread;
-    if (pthread_create(&pthread, NULL, &start, thunk) != 0) {
-      TaskStatus status;
-      status.mutable_task_id()->MergeFrom(task.task_id());
-      status.set_state(TASK_FAILED);
-
-      driver->sendStatusUpdate(status);
-    } else {
-      pthread_detach(pthread);
-
-      TaskStatus status;
-      status.mutable_task_id()->MergeFrom(task.task_id());
-      status.set_state(TASK_RUNNING);
-
-      driver->sendStatusUpdate(status);
-    }*/
-
     runTask(driver, task); 
   }
 

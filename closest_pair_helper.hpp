@@ -74,6 +74,8 @@ struct SplitInfo{
 			cout << "right = " << right << endl; 
 			cout << "parent = " << parent << endl; 
 			cout << "dir = " << dir << endl; 
+			cout << "lMinDist " << lMinDist << endl;
+			cout << "rMinDist " << rMinDist << endl; 
 			cout << "----" << endl << endl; 
 	}
 
