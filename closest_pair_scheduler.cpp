@@ -131,7 +131,6 @@ class ClosestPairScheduler : public Scheduler
           }
         }
       }
-      //cout << "before launchTasks" << endl;
       driver->launchTasks(offer.id(), tasks); 
     }
   }

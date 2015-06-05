@@ -63,30 +63,26 @@ double calcDist(Point p1, Point p2){
 }
 
 
-struct SplitInfo{
+struct SplitInfo {
 	int left, right, parent; 
 	double lMinDist = NOT_SET, rMinDist = NOT_SET;
-	//enum Direction = {LEFT, RIGHT, NONE};
 	Direction dir;
 
-	void printSplitInfo(){
-			cout << "left = " << left << endl; 
-			cout << "right = " << right << endl; 
-			cout << "parent = " << parent << endl; 
-			cout << "dir = " << dir << endl; 
-			cout << "lMinDist " << lMinDist << endl;
-			cout << "rMinDist " << rMinDist << endl; 
-			cout << "----" << endl << endl; 
+	void printSplitInfo() {
+		cout << "left = " << left << endl; 
+		cout << "right = " << right << endl; 
+		cout << "parent = " << parent << endl; 
+		cout << "dir = " << dir << endl; 
+		cout << "lMinDist " << lMinDist << endl;
+		cout << "rMinDist " << rMinDist << endl; 
+		cout << "----" << endl << endl; 
 	}
 
 	SplitInfo(int _left, int _right, int _parent, Direction _dir)
 		:left(_left), right(_right), parent(_parent), 
 		lMinDist(double(NOT_SET)), rMinDist(double(NOT_SET)), 
-		dir(_dir) { 
-			//printSplitInfo();
-		}  
+		dir(_dir) {}  
 
-	//may have to fix this later
 	string convertToString()
 	{
 		vector<double> vec; 
