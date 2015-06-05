@@ -9,7 +9,6 @@ Closest-Pair consists of two main components:
 * 'ClosestPairScheduler' extends 'mesos.Scheduler' 
 
 ## Quick Start with Vagrant
-=========
 
 ### Requirements
 
@@ -22,8 +21,7 @@ Closest-Pair consists of two main components:
 ```bash
 $ wget http://downloads.mesosphere.io/demo/mesos.box -O /tmp/mesos.box
 $ vagrant box add --name mesos-demo /tmp/mesos.box
-$ git clone https://github.com/mesosphere/RENDLER.git
-$ cd RENDLER
+$ git clone https://github.com/chenlily/closest-pair
 $ vagrant up
 ```
 
@@ -31,7 +29,7 @@ $ vagrant up
 
 ```bash
 $ vagrant ssh
-vagrant@mesos:~ $ cd hostfiles/cpp
+vagrant@mesos:~ $ cd hostfiles
 
 # Update install dependencies
 vagrant@mesos:cpp $ sudo apt-get update
