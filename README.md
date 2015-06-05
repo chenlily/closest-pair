@@ -66,7 +66,7 @@ x3 y3
 
 ## Closest-Pair Architecture
 
-### Rendler Scheduler
+### Closest-Pair Scheduler
 
 ### Data Structures
 
